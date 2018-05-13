@@ -1,3 +1,4 @@
+// Package trickle has some simple functions for streaming data at a chosen rate.
 package trickle
 
 import (
@@ -45,13 +46,13 @@ func (r Rate) valid() (err error) {
 	return
 }
 
-// Reader creates a new io.Reader that will read at the specified rate, returning an
-// io.EOF immediately on the given ctx being cancelled or timed out.
-func Reader(src io.Reader, ctx context.Context, rate Rate) (io.Reader, error) {
+// Reader wraps a source, creating a new io.Reader that will read at a specified rate.
+// Reader returns io.EOF immediately on the given ctx being cancelled or timing out.
+func Reader(source io.Reader, ctx context.Context, rate Rate) (io.Reader, error) {
 	if err := rate.valid(); err != nil {
 		return nil, fmt.Errorf("invalid rate: %s", err)
 	}
-	return &trickleReader{src, ctx, rate}, nil
+	return &trickleReader{source, ctx, rate}, nil
 }
 
 type fileStreamer struct {

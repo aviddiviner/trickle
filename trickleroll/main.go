@@ -10,7 +10,7 @@ import (
 
 func main() {
 	rickroller, err := trickle.FileStreamer("rickroll.mp4", trickle.Rate{
-		Bytes:    2 << 10, // 2 << 10 == 2k
+		Bytes:    2 << 10, // 2k
 		Interval: 1 * time.Second,
 	})
 	if err != nil {

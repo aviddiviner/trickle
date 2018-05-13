@@ -35,14 +35,21 @@ type Rate struct {
 	Interval time.Duration
 }
 
+func (r Rate) valid() (err error) {
+	if r.Bytes < 1 {
+		err = fmt.Errorf("bytes must be > 0")
+	}
+	if r.Interval < 1 {
+		err = fmt.Errorf("interval must be > 0")
+	}
+	return
+}
+
 // Reader creates a new io.Reader that will read at the specified rate, returning an
 // io.EOF immediately on the given ctx being cancelled or timed out.
 func Reader(src io.Reader, ctx context.Context, rate Rate) (io.Reader, error) {
-	if rate.Bytes < 1 {
-		return nil, fmt.Errorf("bytes must be > 0")
-	}
-	if rate.Interval < 1 {
-		return nil, fmt.Errorf("interval must be > 0")
+	if err := rate.valid(); err != nil {
+		return nil, fmt.Errorf("invalid rate: %s", err)
 	}
 	return &trickleReader{src, ctx, rate}, nil
 }
@@ -52,8 +59,11 @@ type fileStreamer struct {
 	rate Rate
 }
 
-// FileStreamer reads a file once and then streams its contents to each new http request.
+// FileStreamer reads a file once and then streams its contents on each new http request.
 func FileStreamer(path string, rate Rate) (http.Handler, error) {
+	if err := rate.valid(); err != nil {
+		return nil, fmt.Errorf("invalid rate: %s", err)
+	}
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read file data: %s", err)
